@@ -1,12 +1,11 @@
 package ru.netology.page;
 
-
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideElement;
 import ru.netology.data.DataHelper;
 
 import static com.codeborne.selenide.Selenide.$;
-import static java.lang.Thread.sleep;
+
 
 public class MoneyTransferForCard {
     private SelenideElement amountField = $("[data-test-id=amount] .input__control");
@@ -14,7 +13,6 @@ public class MoneyTransferForCard {
     private SelenideElement transferButton = $("[data-test-id=action-transfer]");
 
     public MoneyTransferForCard() {
-
         amountField.shouldBe(Condition.visible);
     }
 

@@ -1,97 +1,140 @@
 package ru.netology.test;
 
+import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import ru.netology.data.DataHelper;
+import org.openqa.selenium.chrome.ChromeOptions;
 import ru.netology.page.DashboardPage;
 import ru.netology.page.LoginPage;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static ru.netology.data.DataHelper.getFirstCardInfo;
-import static ru.netology.data.DataHelper.getSecondCardInfo;
+import static ru.netology.data.DataHelper.*;
 
 public class MoneyTransferTest {
     @BeforeEach
     public void setup() {
-//        System.setProperty("webdriver.chrome.driver", "C:\\Users\\User\\tmp\\chromedriver.exe");
-//
-//        WebDriver driver = new ChromeDriver();
+
+        ChromeOptions options = new ChromeOptions();
+        options. addArguments("--start-maximized");
+        Map<String, Object> prefs = new HashMap<String, Object>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("password_manager_enabled", false);
+        options. setExperimentalOption("prefs", prefs);
+        Configuration. browserCapabilities = options;
         open("http://localhost:9999");
+
     }
 
-
-    DashboardPage login() {
+    private DashboardPage login() {
         var loginPage = new LoginPage();
-        var authInfo = DataHelper.getAuthInfo();
+        var authInfo = getAuthInfo();
         var verificationPage = loginPage.validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
+        var verificationCode = getVerificationCodeFor(authInfo);
         return verificationPage.validVerify(verificationCode);
     }
 
     @Test
-    void shouldTransferFromTheFirstCardToTheSecond() {
+    void shouldTransferFromFirstCardToSecond() {
         DashboardPage dashboardPage = login();
         var firstCard = getFirstCardInfo();
         var secondCard = getSecondCardInfo();
         int sum = 1500;
-        var balanceForFirstCard = dashboardPage.getCardBalance(firstCard) - sum;
-        var balanceForSecondCard = dashboardPage.getCardBalance(secondCard) + sum;
-        var moneytransferForCard = dashboardPage.choosCardForTransfer(secondCard);
-        dashboardPage = moneytransferForCard.makeMoneyTransfer(Integer.parseInt(String.valueOf(sum)), firstCard);
-        var actualBalanceForFirstCard = dashboardPage.getCardBalance(firstCard);
-        var actualBalanceForSecondCard = dashboardPage.getCardBalance(secondCard);
-        assertEquals(balanceForFirstCard, actualBalanceForFirstCard);
-        assertEquals(balanceForSecondCard, actualBalanceForSecondCard);
 
+        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) - sum;
+        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) + sum;
+
+        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
+        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, firstCard);
+
+        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
+        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
     }
 
     @Test
-    void shouldTransferFromTheSecondCardToTheFirst() {
+    void shouldTransferFromSecondCardToFirst() {
         DashboardPage dashboardPage = login();
         var firstCard = getFirstCardInfo();
         var secondCard = getSecondCardInfo();
         int sum = 2500;
-        var balanceForFirstCard = dashboardPage.getCardBalance(secondCard) - sum;
-        var balanceForSecondCard = dashboardPage.getCardBalance(firstCard) + sum;
-        var moneytransferForCard = dashboardPage.choosCardForTransfer(firstCard);
-        dashboardPage = moneytransferForCard.makeMoneyTransfer(Integer.parseInt(String.valueOf(sum)), secondCard);
-        var actualBalanceForFirstCard = dashboardPage.getCardBalance(secondCard);
-        var actualBalanceForSecondCard = dashboardPage.getCardBalance(firstCard);
-        assertEquals(balanceForFirstCard, actualBalanceForFirstCard);
-        assertEquals(balanceForSecondCard, actualBalanceForSecondCard);
 
+        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) + sum;
+        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) - sum;
+
+        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(firstCard);
+        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, secondCard);
+
+        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
+        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
     }
 
     @Test
-    void shouldTransferFromTheSecondCardToTheFirstOverLimit() {
+    void shouldTransferFromSecondCardToFirstOverLimit() {
         DashboardPage dashboardPage = login();
         var firstCard = getFirstCardInfo();
         var secondCard = getSecondCardInfo();
         int sum = 22000;
-        var balanceForFirstCard = dashboardPage.getCardBalance(secondCard) - sum;
-        var balanceForSecondCard = dashboardPage.getCardBalance(firstCard) + sum;
-        var moneytransferForCard = dashboardPage.choosCardForTransfer(firstCard);
-        dashboardPage = moneytransferForCard.makeMoneyTransfer(Integer.parseInt(String.valueOf(sum)), secondCard);
-        var actualBalanceForFirstCard = dashboardPage.getCardBalance(secondCard);
-        var actualBalanceForSecondCard = dashboardPage.getCardBalance(firstCard);
-        assertEquals(balanceForFirstCard, actualBalanceForFirstCard);
-        assertEquals(balanceForSecondCard, actualBalanceForSecondCard);
 
+        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) + sum;
+        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) - sum;
+
+        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(firstCard);
+        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, secondCard);
+
+        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
+        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
     }
 
+
     @Test
-    void shouldAllowAnyAmountTransfer() {
+    void shouldTransferFromSecondCardToFirstZero() {
         DashboardPage dashboardPage = login();
         var firstCard = getFirstCardInfo();
         var secondCard = getSecondCardInfo();
-        int sum = 11000;
-        var moneytransferForCard = dashboardPage.choosCardForTransfer(secondCard);
-        dashboardPage = moneytransferForCard.makeMoneyTransfer(Integer.parseInt(String.valueOf(sum)), firstCard);
-        var actualBalanceForFirstCard = dashboardPage.getCardBalance(firstCard);
-        var actualBalanceForSecondCard = dashboardPage.getCardBalance(secondCard);
-        assertEquals(actualBalanceForFirstCard, actualBalanceForSecondCard);
+        int sum = 0;
+
+        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) + sum;
+        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) - sum;
+
+        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(firstCard);
+        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, secondCard);
+
+        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
+        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
+    }
+
+    @Test
+    void shouldTransferCope() {
+        DashboardPage dashboardPage = login();
+        var firstCard = getFirstCardInfo();
+        var secondCard = getSecondCardInfo();
+        double sum = 10.02;
+
+        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) + sum;
+        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) - sum;
+
+        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(firstCard);
+        dashboardPage = moneyTransferForCard.makeMoneyTransfer((int) sum, secondCard);
+
+        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
+        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
     }
 }
