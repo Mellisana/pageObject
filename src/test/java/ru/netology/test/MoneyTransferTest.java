@@ -139,7 +139,7 @@ public class MoneyTransferTest {
     @Test
     @Order(6)
     void shouldNotTransferInvalidAmountWithZero() {
-        String sumString = "020000";
+        String sumString = "02000";
         double sum = Double.parseDouble(sumString);
 
         var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
