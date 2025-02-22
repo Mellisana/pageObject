@@ -143,4 +143,29 @@ public class MoneyTransferTest {
         assertNotNull(errorMessage, "Ошибка не отображается");
         assertEquals("Операция отклонена, невозможно перевести сумму свыше баланса", errorMessage, "Сообщение об ошибке отсутствует");
     }
+
+    @Test
+    void shouldNotTransferInvalidAmountWithZero() {
+        int currentBalance = dashboardPage.getCardBalance(firstCard);
+        int sum = currentBalance + 02026;
+
+        // Сохраняем текущие балансы перед попыткой перевода
+        int initialFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        int initialSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
+        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, firstCard);
+
+        // Проверяем наличие ошибки
+        String errorMessage = moneyTransferForCard.getErrorMessage();
+        assertNotNull(errorMessage, "Ошибка не отображается");
+        assertEquals("Введите корректную сумму перевода", errorMessage, "Сообщение об ошибке отсутсвует.");
+
+        // Проверяем, что балансы остались без изменений
+        int actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
+        int actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
+
+        assertEquals(initialFirstCardBalance, actualFirstCardBalance, "Баланс первой карты изменился после неудачного перевода.");
+        assertEquals(initialSecondCardBalance, actualSecondCardBalance, "Баланс второй карты изменился после неудачного перевода.");
+    }
 }
