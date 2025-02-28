@@ -3,7 +3,6 @@ package ru.netology.page;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
-import lombok.val;
 import ru.netology.data.DataHelper;
 
 import static com.codeborne.selenide.Condition.visible;
@@ -12,9 +11,8 @@ import static com.codeborne.selenide.Selenide.$$;
 
 public class DashboardPage {
     private SelenideElement heading = $("[data-test-id=dashboard]");
-    private ElementsCollection cards =
-
-            $$(".list__item div");
+    private SelenideElement reloadButton = $("[data-test-id=action-reload]");
+    private ElementsCollection cards = $$(".list__item div");
     private final String balanceStart = "баланс: ";
     private final String balanceFinish = " р.";
 
@@ -23,16 +21,22 @@ public class DashboardPage {
     }
 
     public int getCardBalance(DataHelper.CardInfo cardInfo) {
-        var text = cards.findBy(Condition.text(cardInfo.getCardNumber().substring(12, 16)))
-                .getText();
+        var text = getCard(cardInfo).getText();
         return extractBalance(text);
     }
 
-    public MoneyTransferForCard chooseCardForTransfer(DataHelper.CardInfo cardInfo) {
-        cards.findBy(Condition.text(cardInfo.getCardNumber().substring(12, 16)))
-                .$("[data-test-id=action-deposit]")
-                .click();
+    private SelenideElement getCard(DataHelper.CardInfo cardInfo) {
+        return cards.findBy(Condition.text(cardInfo.getCardNumber().substring(12, 16)));
+    }
+
+    public MoneyTransferForCard selectCardToTransfer(DataHelper.CardInfo cardInfo) {
+        getCard(cardInfo).$("button").click();
         return new MoneyTransferForCard();
+    }
+
+    public void reloadDashboardPage() {
+        reloadButton.click();
+        heading.shouldBe(visible);
     }
 
     private int extractBalance(String text) {

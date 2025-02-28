@@ -3,7 +3,8 @@ package ru.netology.data;
 import lombok.Value;
 
 public class DataHelper {
-    private DataHelper() {}
+    private DataHelper() {
+    }
 
     @Value
     public static class AuthInfo {
@@ -29,17 +30,23 @@ public class DataHelper {
         private String cardNumber;
     }
 
-    // Универсальный метод для получения карточки
     public static CardInfo getCardInfo(String cardNumber) {
         return new CardInfo(cardNumber);
     }
 
-    // Для удобства оставляем предыдущие методы
     public static CardInfo getFirstCardInfo() {
         return getCardInfo("5559000000000001");
     }
 
     public static CardInfo getSecondCardInfo() {
         return getCardInfo("5559000000000002");
+    }
+
+    public static int generateValidAmount(int balance) {
+        return Math.abs(balance) / 10;
+    }
+
+    public static int generateInvalidAmount(int balance) {
+        return Math.abs(balance) + 1;
     }
 }

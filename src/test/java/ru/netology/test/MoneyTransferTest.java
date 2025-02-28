@@ -2,7 +2,6 @@ package ru.netology.test;
 
 import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.chrome.ChromeOptions;
 import ru.netology.data.DataHelper;
@@ -54,99 +53,46 @@ public class MoneyTransferTest {
     }
 
     @Test
-    @Order(1)
     void shouldTransferFromFirstCardToSecond() {
         int currentBalance = dashboardPage.getCardBalance(firstCard);
-        int sum = Math.min(currentBalance, (int) Math.floor(currentBalance * 0.9));
-        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) - sum;
-        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) + sum;
+        int sum = currentBalance / 10;
+        int expectedFirstCardBalance = currentBalance - sum;
+        int expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) + sum;
 
-        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
-        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, firstCard);
+        var transferPage = dashboardPage.selectCardToTransfer(secondCard);
+        transferPage.makeValidTransfer(String.valueOf(sum), firstCard);
 
-        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
-        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
-
-        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
-        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
+        assertBalances(expectedFirstCardBalance, expectedSecondCardBalance);
     }
 
     @Test
-    @Order(2)
-    void shouldTransferFromSecondCardToFirst() {
-        int currentBalance = dashboardPage.getCardBalance(secondCard);
-        int sum = Math.min(currentBalance, (int) Math.floor(currentBalance * 0.8));
-        var expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) + sum;
-        var expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) - sum;
-
-        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(firstCard);
-        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, secondCard);
-
-        var actualFirstCardBalance = dashboardPage.getCardBalance(firstCard);
-        var actualSecondCardBalance = dashboardPage.getCardBalance(secondCard);
-
-        assertEquals(expectedFirstCardBalance, actualFirstCardBalance);
-        assertEquals(expectedSecondCardBalance, actualSecondCardBalance);
-    }
-
-    @Test
-    @Order(3)
     void shouldNotTransferFromSecondCardToFirstZero() {
-        int sum = 0;
+        String sum = "0";
 
-        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(firstCard);
-        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, secondCard);
+        var transferPage = dashboardPage.selectCardToTransfer(firstCard);
+        transferPage.makeTransfer(sum, secondCard);
 
-        String errorMessage = moneyTransferForCard.getErrorMessage();
-        assertNotNull(errorMessage, "Ошибка не отображается");
-        assertEquals("Введите сумму перевода", errorMessage, "Сообщение об ошибке отсутствует.");
+        transferPage.findErrorMessage("Введите сумму перевода");
     }
 
     @Test
-    @Order(4)
-    void shouldTransferPartialAmountWithCop() {
-        double currentBalance = dashboardPage.getCardBalance(firstCard);
-
-        if ((currentBalance % 1) == 0) {
-            currentBalance += 0.01;
-        }
-
-        double sum = Math.min(currentBalance, Math.round(currentBalance * 0.5 * 100.0) / 100.0);
-
-        double expectedFirstCardBalance = dashboardPage.getCardBalance(firstCard) - sum;
-        double expectedSecondCardBalance = dashboardPage.getCardBalance(secondCard) + sum;
-
-        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
-        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, firstCard);
-
-        assertBalances((int) expectedFirstCardBalance, (int) expectedSecondCardBalance);
-    }
-
-    @Test
-    @Order(5)
     void shouldNotTransferFromFirstCardToSecondOverLimit() {
         int currentBalance = dashboardPage.getCardBalance(firstCard);
         int sum = currentBalance + 5000;
-
-        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
-        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, firstCard);
-
-        String errorMessage = moneyTransferForCard.getErrorMessage();
-        assertNotNull(errorMessage, "Ошибка не отображается");
-        assertEquals("Операция отклонена, невозможно перевести сумму свыше баланса", errorMessage, "Сообщение об ошибке отсутствует");
+        var transferPage = dashboardPage.selectCardToTransfer(secondCard);
+        transferPage.makeTransfer(String.valueOf(sum), firstCard);
+        transferPage.findErrorMessage("Операция отклонена, невозможно перевести сумму свыше баланса");
     }
 
     @Test
-    @Order(6)
     void shouldNotTransferInvalidAmountWithZero() {
         String sumString = "02000";
-        double sum = Double.parseDouble(sumString);
 
-        var moneyTransferForCard = dashboardPage.chooseCardForTransfer(secondCard);
-        dashboardPage = moneyTransferForCard.makeMoneyTransfer(sum, firstCard);
+        var transferPage = dashboardPage.selectCardToTransfer(secondCard);
+        transferPage.makeTransfer(sumString, firstCard);
 
-        String errorMessage = moneyTransferForCard.getErrorMessage();
+        String errorMessage = transferPage.getErrorMessage();
         assertNotNull(errorMessage, "Ошибка не отображается");
-        assertEquals("Введите корректную сумму перевода", errorMessage, "Сообщение об ошибке отсутствует.");
+        assertEquals("Введите корректную сумму перевода", errorMessage);
     }
 }

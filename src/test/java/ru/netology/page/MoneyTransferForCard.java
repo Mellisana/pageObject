@@ -4,38 +4,40 @@ import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideElement;
 import ru.netology.data.DataHelper;
 
+import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selenide.$;
 
 public class MoneyTransferForCard {
-    private SelenideElement amountField = $("[data-test-id=amount] .input__control");
-    private SelenideElement fromField = $("[data-test-id=from] .input__control");
-    private SelenideElement transferButton = $("[data-test-id=action-transfer]");
+    private final SelenideElement transferButton = $("[data-test-id='action-transfer']");
+    private final SelenideElement amountInput = $("[data-test-id='amount'] input");
+    private final SelenideElement fromInput = $("[data-test-id='from'] input");
+    private final SelenideElement transferHead = $(byText("Пополнение карты"));
+    private final SelenideElement errorMessage = $("[data-test-id='error-notification'] .notification__content");
 
     public MoneyTransferForCard() {
-        amountField.shouldBe(Condition.visible);
+        transferHead.shouldBe(visible);
     }
 
-    public DashboardPage makeMoneyTransfer(double sum, DataHelper.CardInfo cardInfo) {
-        // Проверяем, является ли сумма целым числом
-        if (sum % 1 == 0) {
-            // Если сумма целая, преобразуем в строку без запятой
-            amountField.setValue(String.valueOf((int) sum));
-        } else {
-            // Если сумма дробная, преобразуем в строку с запятой
-            amountField.setValue(String.format("%.2f", sum).replace('.', ','));
-        }
-        fromField.setValue(cardInfo.getCardNumber());
-        transferButton.click();
+    public DashboardPage makeValidTransfer(String amountToTransfer, DataHelper.CardInfo cardInfo) {
+        makeTransfer(amountToTransfer, cardInfo);
         return new DashboardPage();
     }
 
-    public String getErrorMessage() {
-        SelenideElement errorElement = $("#error-message");
+    public void makeTransfer(String amountToTransfer, DataHelper.CardInfo cardInfo) {
+        amountInput.setValue(amountToTransfer);
+        fromInput.setValue(cardInfo.getCardNumber());
+        transferButton.click();
+    }
 
-        if (errorElement.exists()) {
-            return errorElement.text();
-        } else {
-            return "";
-        }
+    public void findErrorMessage(String expectedText) {
+        errorMessage.should(Condition.and(
+                "Проверка сообщения об ошибке",
+                Condition.text(expectedText),
+                Condition.visible
+        ));
+    }
+    public String getErrorMessage() {
+        return errorMessage.getText();
     }
 }
